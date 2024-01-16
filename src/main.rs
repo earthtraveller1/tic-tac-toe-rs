@@ -1,6 +1,8 @@
 use ggez::{
     conf::WindowSetup,
     event::{self, EventHandler},
+    glam::Vec2,
+    graphics::{Canvas, Color, DrawMode, Mesh, Rect},
     ContextBuilder, GameError, GameResult,
 };
 
@@ -17,7 +19,25 @@ impl EventHandler<GameError> for Game {
         Ok(())
     }
 
-    fn draw(&mut self, _ctx: &mut ggez::Context) -> Result<(), GameError> {
+    fn draw(&mut self, context: &mut ggez::Context) -> Result<(), GameError> {
+        let factor: f32 = 0.90;
+        let mut canvas = Canvas::from_frame(context, Color::new(factor, factor, factor, factor));
+
+        let test = Mesh::new_rectangle(
+            context,
+            DrawMode::fill(),
+            Rect {
+                x: 0.0,
+                y: 0.0,
+                w: 100.0,
+                h: 100.0,
+            },
+            Color::BLUE,
+        )?;
+
+        canvas.draw(&test, Vec2::new(100.0, 100.0));
+
+        canvas.finish(context)?;
         Ok(())
     }
 }
