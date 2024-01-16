@@ -42,11 +42,14 @@ impl EventHandler<GameError> for Game {
         let factor: f32 = 0.90;
         let mut canvas = Canvas::from_frame(context, Color::new(factor, factor, factor, factor));
 
-        let scale = Vec2::new(0.25, 0.25);
+        let scale_factor = 0.20;
+        let scale = Vec2::new(scale_factor, scale_factor);
+
+        let first = 400.0 * 1.0 / 3.0;
+        let second = 400.0 * 2.0 / 3.0;
 
         {
-            let first = 400.0 * 1.0 / 3.0;
-            let second = 400.0 * 2.0 / 3.0;
+            // Draw the grid
 
             canvas.draw(
                 &self.grid_line,
@@ -62,26 +65,47 @@ impl EventHandler<GameError> for Game {
                 &self.grid_line,
                 DrawParam::new()
                     .rotation(90.0f32.to_radians())
-                    .dest(Vec2::new(200.0 + first, 120.0))
+                    .dest(Vec2::new(200.0 + first, 120.0)),
             );
 
             canvas.draw(
                 &self.grid_line,
                 DrawParam::new()
                     .rotation(90.0f32.to_radians())
-                    .dest(Vec2::new(200.0 + second, 120.0))
+                    .dest(Vec2::new(200.0 + second, 120.0)),
             );
         }
 
-        canvas.draw(
-            &self.can_pooper_image,
-            DrawParam::new().dest(Vec2::new(100.0, 100.0)).scale(scale),
-        );
+        {
+            // Draw the characters
+            let padding = 10.0;
 
-        canvas.draw(
-            &self.angry_pooper_image,
-            DrawParam::new().dest(Vec2::new(400.0, 100.0)).scale(scale),
-        );
+            let x_locations = [
+                200.0 + padding,
+                200.0 + first + padding,
+                200.0 + second + padding,
+            ];
+
+            let y_locations = [
+                120.0 + padding,
+                120.0 + first + padding,
+                120.0 + second + padding,
+            ];
+
+            for x in x_locations {
+                for y in y_locations {
+                    canvas.draw(
+                        &self.can_pooper_image,
+                        DrawParam::new().dest(Vec2::new(x, y)).scale(scale),
+                    );
+                }
+            }
+
+            canvas.draw(
+                &self.angry_pooper_image,
+                DrawParam::new().dest(Vec2::new(400.0, 100.0)).scale(scale),
+            );
+        }
 
         canvas.finish(context)?;
         Ok(())
