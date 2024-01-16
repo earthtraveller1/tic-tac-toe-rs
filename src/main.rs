@@ -2,15 +2,21 @@ use ggez::{
     conf::WindowSetup,
     event::{self, EventHandler},
     glam::Vec2,
-    graphics::{Canvas, Color, DrawMode, Mesh, Rect},
+    graphics::{Canvas, Color, DrawParam, Image},
     ContextBuilder, GameError, GameResult,
 };
 
-struct Game {}
+struct Game {
+    can_pooper_image: Image,
+    angry_pooper_image: Image,
+}
 
 impl Game {
-    fn new() -> GameResult<Game> {
-        Ok(Game {})
+    fn new(context: &ggez::Context) -> GameResult<Game> {
+        Ok(Game {
+            can_pooper_image: Image::from_path(context, "/canpooper_right.png")?,
+            angry_pooper_image: Image::from_path(context, "/canpooper_right_angry.png")?,
+        })
     }
 }
 
@@ -23,19 +29,21 @@ impl EventHandler<GameError> for Game {
         let factor: f32 = 0.90;
         let mut canvas = Canvas::from_frame(context, Color::new(factor, factor, factor, factor));
 
-        let test = Mesh::new_rectangle(
-            context,
-            DrawMode::fill(),
-            Rect {
-                x: 0.0,
-                y: 0.0,
-                w: 100.0,
-                h: 100.0,
-            },
-            Color::BLUE,
-        )?;
+        let scale = Vec2::new(0.25, 0.25);
 
-        canvas.draw(&test, Vec2::new(100.0, 100.0));
+        canvas.draw(
+            &self.can_pooper_image,
+            DrawParam::new()
+                .dest(Vec2::new(100.0, 100.0))
+                .scale(scale),
+        );
+
+        canvas.draw(
+            &self.angry_pooper_image,
+            DrawParam::new()
+                .dest(Vec2::new(400.0, 100.0))
+                .scale(scale),
+        );
 
         canvas.finish(context)?;
         Ok(())
@@ -48,8 +56,9 @@ pub fn main() -> GameResult {
             title: "Tic Tac Toe".to_string(),
             ..Default::default()
         })
+        .add_resource_path("./assets")
         .build()?;
 
-    let game = Game::new()?;
+    let game = Game::new(&context)?;
     event::run(context, event_loop, game)
 }
