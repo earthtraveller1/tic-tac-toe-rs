@@ -1,19 +1,32 @@
 use ggez::{
-    conf::{WindowSetup, WindowMode},
+    conf::{WindowMode, WindowSetup},
     event::{self, EventHandler},
     glam::Vec2,
     graphics::{Canvas, Color, DrawMode, DrawParam, Image, Mesh, Rect},
     ContextBuilder, GameError, GameResult,
 };
 
+#[derive(Default)]
+enum CellState {
+    #[default]
+    CanPooper,
+    AngryPooper,
+}
+
 struct Game {
     can_pooper_image: Image,
     angry_pooper_image: Image,
     grid_line: Mesh,
+    cells: [[CellState; 3]; 3],
 }
 
 const WINDOW_WIDTH: f32 = 800.0;
 const WINDOW_HEIGHT: f32 = 600.0;
+const GAME_WIDTH: f32 = 400.0;
+const GAME_HEIGHT: f32 = 400.0;
+const GAME_MARGIN_X: f32 = (WINDOW_WIDTH - GAME_WIDTH) / 2.0;
+const GAME_MARGIN_Y: f32 = (WINDOW_HEIGHT - GAME_HEIGHT) / 2.0;
+const CELL_SIZE: f32 = GAME_WIDTH * 1.0 / 3.0;
 
 impl Game {
     fn new(context: &ggez::Context) -> GameResult<Game> {
@@ -32,6 +45,7 @@ impl Game {
                 5.0,
                 Color::new(0.1, 0.1, 0.25, 1.0),
             )?,
+            cells: Default::default(),
         })
     }
 }
@@ -48,33 +62,31 @@ impl EventHandler<GameError> for Game {
         let scale_factor = 0.20;
         let scale = Vec2::new(scale_factor, scale_factor);
 
-        let cell_size = 400.0 * 1.0 / 3.0;
-
         {
             // Draw the grid
 
             canvas.draw(
                 &self.grid_line,
-                DrawParam::new().dest(Vec2::new(200.0, 120.0 + cell_size)),
+                DrawParam::new().dest(Vec2::new(GAME_MARGIN_X, GAME_MARGIN_Y + CELL_SIZE)),
             );
 
             canvas.draw(
                 &self.grid_line,
-                DrawParam::new().dest(Vec2::new(200.0, 120.0 + 2.0 * cell_size)),
-            );
-
-            canvas.draw(
-                &self.grid_line,
-                DrawParam::new()
-                    .rotation(90.0f32.to_radians())
-                    .dest(Vec2::new(200.0 + cell_size, 120.0)),
+                DrawParam::new().dest(Vec2::new(GAME_MARGIN_X, GAME_MARGIN_Y + 2.0 * CELL_SIZE)),
             );
 
             canvas.draw(
                 &self.grid_line,
                 DrawParam::new()
                     .rotation(90.0f32.to_radians())
-                    .dest(Vec2::new(200.0 + 2.0 * cell_size, 120.0)),
+                    .dest(Vec2::new(GAME_MARGIN_X + CELL_SIZE, 120.0)),
+            );
+
+            canvas.draw(
+                &self.grid_line,
+                DrawParam::new()
+                    .rotation(90.0f32.to_radians())
+                    .dest(Vec2::new(GAME_MARGIN_X + 2.0 * CELL_SIZE, 120.0)),
             );
         }
 
@@ -83,15 +95,15 @@ impl EventHandler<GameError> for Game {
             let padding = 10.0;
 
             let x_locations = [
-                200.0 + padding,
-                200.0 + cell_size + padding,
-                200.0 + 2.0 * cell_size + padding,
+                GAME_MARGIN_X + padding,
+                GAME_MARGIN_X + CELL_SIZE + padding,
+                GAME_MARGIN_X + 2.0 * CELL_SIZE + padding,
             ];
 
             let y_locations = [
-                120.0 + padding,
-                120.0 + cell_size + padding,
-                120.0 + 2.0 * cell_size + padding,
+                GAME_MARGIN_Y + padding,
+                GAME_MARGIN_Y + CELL_SIZE + padding,
+                GAME_MARGIN_Y + 2.0 * CELL_SIZE + padding,
             ];
 
             for x in x_locations {
@@ -102,6 +114,30 @@ impl EventHandler<GameError> for Game {
                     );
                 }
             }
+
+            self.cells
+                .iter()
+                .enumerate()
+                .for_each(|(cell_y, cell_row)| {
+                    let y = GAME_MARGIN_Y + (cell_y as f32) * CELL_SIZE + padding;
+                    cell_row.iter().enumerate().for_each(|(cell_x, cell)| {
+                        let x = GAME_MARGIN_X + (cell_x as f32) * CELL_SIZE + padding;
+                        match cell {
+                            CellState::CanPooper => {
+                                canvas.draw(
+                                    &self.can_pooper_image,
+                                    DrawParam::new().dest(Vec2::new(x, y)).scale(scale),
+                                );
+                            }
+                            CellState::AngryPooper => {
+                                canvas.draw(
+                                    &self.angry_pooper_image,
+                                    DrawParam::new().dest(Vec2::new(x, y)).scale(scale),
+                                );
+                            }
+                        }
+                    })
+                });
 
             canvas.draw(
                 &self.angry_pooper_image,
