@@ -123,6 +123,7 @@ pub fn main() -> GameResult {
         .window_mode(WindowMode {
             width: WINDOW_WIDTH,
             height: WINDOW_HEIGHT,
+            resizable: false,
             ..Default::default()
         })
         .add_resource_path("./assets")
