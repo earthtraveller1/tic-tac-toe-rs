@@ -1,5 +1,5 @@
 use ggez::{
-    conf::WindowSetup,
+    conf::{WindowSetup, WindowMode},
     event::{self, EventHandler},
     glam::Vec2,
     graphics::{Canvas, Color, DrawMode, DrawParam, Image, Mesh, Rect},
@@ -11,6 +11,9 @@ struct Game {
     angry_pooper_image: Image,
     grid_line: Mesh,
 }
+
+const WINDOW_WIDTH: f32 = 800.0;
+const WINDOW_HEIGHT: f32 = 600.0;
 
 impl Game {
     fn new(context: &ggez::Context) -> GameResult<Game> {
@@ -115,6 +118,11 @@ pub fn main() -> GameResult {
     let (context, event_loop) = ContextBuilder::new("tic-tac-toe", "earthtraveller1")
         .window_setup(WindowSetup {
             title: "Tic Tac Toe".to_string(),
+            ..Default::default()
+        })
+        .window_mode(WindowMode {
+            width: WINDOW_WIDTH,
+            height: WINDOW_HEIGHT,
             ..Default::default()
         })
         .add_resource_path("./assets")
