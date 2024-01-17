@@ -94,27 +94,6 @@ impl EventHandler<GameError> for Game {
             // Draw the characters
             let padding = 10.0;
 
-            let x_locations = [
-                GAME_MARGIN_X + padding,
-                GAME_MARGIN_X + CELL_SIZE + padding,
-                GAME_MARGIN_X + 2.0 * CELL_SIZE + padding,
-            ];
-
-            let y_locations = [
-                GAME_MARGIN_Y + padding,
-                GAME_MARGIN_Y + CELL_SIZE + padding,
-                GAME_MARGIN_Y + 2.0 * CELL_SIZE + padding,
-            ];
-
-            for x in x_locations {
-                for y in y_locations {
-                    canvas.draw(
-                        &self.can_pooper_image,
-                        DrawParam::new().dest(Vec2::new(x, y)).scale(scale),
-                    );
-                }
-            }
-
             self.cells
                 .iter()
                 .enumerate()
