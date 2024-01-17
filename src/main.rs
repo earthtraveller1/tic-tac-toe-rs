@@ -9,6 +9,7 @@ use ggez::{
 #[derive(Default)]
 enum CellState {
     #[default]
+    Nothing,
     CanPooper,
     AngryPooper,
 }
@@ -75,6 +76,7 @@ impl EventHandler<GameError> for Game {
                                 CellState::AngryPooper => {
                                     *cell = CellState::CanPooper;
                                 }
+                                CellState::Nothing => {}
                             }
                         }
                     })
@@ -142,7 +144,8 @@ impl EventHandler<GameError> for Game {
                                     &self.angry_pooper_image,
                                     DrawParam::new().dest(Vec2::new(x, y)).scale(scale),
                                 );
-                            }
+                            },
+                            CellState::Nothing => {}
                         }
                     })
                 });
