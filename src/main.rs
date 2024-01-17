@@ -14,11 +14,27 @@ enum CellState {
     AngryPooper,
 }
 
+impl From<Turn> for CellState {
+    fn from(value: Turn) -> Self {
+        match value {
+            Turn::CanPooper => Self::CanPooper,
+            Turn::AngryPooper => Self::AngryPooper,
+        }
+    }
+}
+
+#[derive(Clone)]
+enum Turn {
+    CanPooper,
+    AngryPooper
+}
+
 struct Game {
     can_pooper_image: Image,
     angry_pooper_image: Image,
     grid_line: Mesh,
     cells: [[CellState; 3]; 3],
+    turn: Turn
 }
 
 const WINDOW_WIDTH: f32 = 800.0;
@@ -47,6 +63,7 @@ impl Game {
                 Color::new(0.1, 0.1, 0.25, 1.0),
             )?,
             cells: Default::default(),
+            turn: Turn::CanPooper
         })
     }
 }
@@ -69,14 +86,13 @@ impl EventHandler<GameError> for Game {
                         let within_y_bounds = mouse_y >= y && mouse_y <= y + CELL_SIZE;
 
                         if within_x_bounds && within_y_bounds {
-                            match cell {
-                                CellState::CanPooper => {
-                                    *cell = CellState::AngryPooper;
+                            if let CellState::Nothing = cell {
+                                *cell = self.turn.clone().into();
+
+                                self.turn = match self.turn {
+                                    Turn::CanPooper => Turn::AngryPooper,
+                                    Turn::AngryPooper => Turn::CanPooper,
                                 }
-                                CellState::AngryPooper => {
-                                    *cell = CellState::CanPooper;
-                                }
-                                CellState::Nothing => {}
                             }
                         }
                     })
