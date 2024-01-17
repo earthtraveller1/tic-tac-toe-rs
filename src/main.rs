@@ -146,11 +146,6 @@ impl EventHandler<GameError> for Game {
                         }
                     })
                 });
-
-            canvas.draw(
-                &self.angry_pooper_image,
-                DrawParam::new().dest(Vec2::new(400.0, 100.0)).scale(scale),
-            );
         }
 
         canvas.finish(context)?;
