@@ -2,7 +2,7 @@ use ggez::{
     conf::{WindowMode, WindowSetup},
     event::{self, EventHandler, MouseButton},
     glam::Vec2,
-    graphics::{Canvas, Color, DrawMode, DrawParam, Image, Mesh, Rect},
+    graphics::{Canvas, Color, DrawMode, DrawParam, Image, Mesh, PxScale, Rect, Text},
     ContextBuilder, GameError, GameResult,
 };
 
@@ -26,7 +26,7 @@ impl From<Turn> for CellState {
 #[derive(Clone)]
 enum Turn {
     CanPooper,
-    AngryPooper
+    AngryPooper,
 }
 
 struct Game {
@@ -34,7 +34,7 @@ struct Game {
     angry_pooper_image: Image,
     grid_line: Mesh,
     cells: [[CellState; 3]; 3],
-    turn: Turn
+    turn: Turn,
 }
 
 const WINDOW_WIDTH: f32 = 800.0;
@@ -63,7 +63,7 @@ impl Game {
                 Color::new(0.1, 0.1, 0.25, 1.0),
             )?,
             cells: Default::default(),
-            turn: Turn::CanPooper
+            turn: Turn::CanPooper,
         })
     }
 }
@@ -73,7 +73,13 @@ impl EventHandler<GameError> for Game {
         Ok(())
     }
 
-    fn mouse_button_down_event(&mut self, _context: &mut ggez::Context, button: MouseButton, mouse_x: f32, mouse_y: f32) -> Result<(), GameError> {
+    fn mouse_button_down_event(
+        &mut self,
+        _context: &mut ggez::Context,
+        button: MouseButton,
+        mouse_x: f32,
+        mouse_y: f32,
+    ) -> Result<(), GameError> {
         if button == MouseButton::Left {
             self.cells
                 .iter_mut()
@@ -160,11 +166,46 @@ impl EventHandler<GameError> for Game {
                                     &self.angry_pooper_image,
                                     DrawParam::new().dest(Vec2::new(x, y)).scale(scale),
                                 );
-                            },
+                            }
                             CellState::Nothing => {}
                         }
                     })
                 });
+        }
+
+        {
+            // Draw the status to indicate who's turn it is.
+
+            let status_size = 64.0;
+
+            let mut status_text = Text::new("'s turn!");
+            status_text.set_scale(PxScale {
+                x: status_size,
+                y: status_size,
+            });
+
+            // let text_bounds = status_text.measure(&context.gfx)?;
+            let pooper_size = status_size;
+            let pooper_scale = pooper_size / 512.0;
+
+            canvas.draw(
+                &status_text,
+                DrawParam::new()
+                    .dest(Vec2::new(pooper_size, 0.0))
+                    .color(Color::new(0.01, 0.01, 0.01, 1.0)),
+            );
+
+            let status_icon = match self.turn {
+                Turn::CanPooper => &self.can_pooper_image,
+                Turn::AngryPooper => &self.angry_pooper_image,
+            };
+
+            canvas.draw(
+                status_icon,
+                DrawParam::new()
+                    .dest(Vec2::new(0.0, 0.0))
+                    .scale(Vec2::new(pooper_scale, pooper_scale)),
+            );
         }
 
         canvas.finish(context)?;
