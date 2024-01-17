@@ -1,6 +1,6 @@
 use ggez::{
     conf::{WindowMode, WindowSetup},
-    event::{self, EventHandler},
+    event::{self, EventHandler, MouseButton},
     glam::Vec2,
     graphics::{Canvas, Color, DrawMode, DrawParam, Image, Mesh, Rect},
     ContextBuilder, GameError, GameResult,
@@ -51,7 +51,36 @@ impl Game {
 }
 
 impl EventHandler<GameError> for Game {
-    fn update(&mut self, _ctx: &mut ggez::Context) -> Result<(), GameError> {
+    fn update(&mut self, _context: &mut ggez::Context) -> Result<(), GameError> {
+        Ok(())
+    }
+
+    fn mouse_button_down_event(&mut self, _context: &mut ggez::Context, button: MouseButton, mouse_x: f32, mouse_y: f32) -> Result<(), GameError> {
+        if button == MouseButton::Left {
+            self.cells
+                .iter_mut()
+                .enumerate()
+                .for_each(|(cell_y, cell_row)| {
+                    let y = GAME_MARGIN_Y + (cell_y as f32) * CELL_SIZE;
+                    cell_row.iter_mut().enumerate().for_each(|(cell_x, cell)| {
+                        let x = GAME_MARGIN_X + (cell_x as f32) * CELL_SIZE;
+                        let within_x_bounds = mouse_x >= x && mouse_x <= x + CELL_SIZE;
+                        let within_y_bounds = mouse_y >= y && mouse_y <= y + CELL_SIZE;
+
+                        if within_x_bounds && within_y_bounds {
+                            match cell {
+                                CellState::CanPooper => {
+                                    *cell = CellState::AngryPooper;
+                                }
+                                CellState::AngryPooper => {
+                                    *cell = CellState::CanPooper;
+                                }
+                            }
+                        }
+                    })
+                });
+        }
+
         Ok(())
     }
 
