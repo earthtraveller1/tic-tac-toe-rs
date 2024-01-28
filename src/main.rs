@@ -88,6 +88,14 @@ impl Game {
             }
         }
 
+        for i in 0..self.cells.len() {
+            let cells = &self.cells;
+
+            if cells[0][i] == cells[1][i] && cells[1][i] == cells[2][i] {
+                return (&cells[0][i]).try_into().ok();
+            }
+        }
+
         return None;
     }
 }
