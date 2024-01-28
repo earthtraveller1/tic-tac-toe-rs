@@ -105,6 +105,10 @@ impl EventHandler<GameError> for Game {
         mouse_x: f32,
         mouse_y: f32,
     ) -> Result<(), GameError> {
+        if let Some(_) = self.winner {
+            return Ok(());
+        }
+
         if button == MouseButton::Left {
             self.cells
                 .iter_mut()
