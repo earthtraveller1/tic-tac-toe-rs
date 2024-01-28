@@ -6,7 +6,7 @@ use ggez::{
     ContextBuilder, GameError, GameResult,
 };
 
-#[derive(Default)]
+#[derive(Default, PartialEq, Clone)]
 enum CellState {
     #[default]
     Nothing,
@@ -14,19 +14,31 @@ enum CellState {
     AngryPooper,
 }
 
-impl From<Turn> for CellState {
-    fn from(value: Turn) -> Self {
+impl From<Player> for CellState {
+    fn from(value: Player) -> Self {
         match value {
-            Turn::CanPooper => Self::CanPooper,
-            Turn::AngryPooper => Self::AngryPooper,
+            Player::CanPooper => Self::CanPooper,
+            Player::AngryPooper => Self::AngryPooper,
         }
     }
 }
 
 #[derive(Clone)]
-enum Turn {
+enum Player {
     CanPooper,
     AngryPooper,
+}
+
+impl TryFrom<&CellState> for Player {
+    type Error = ();
+
+    fn try_from(value: &CellState) -> Result<Self, Self::Error> {
+        match value {
+            CellState::Nothing => Err(()),
+            CellState::CanPooper => Ok(Player::CanPooper),
+            CellState::AngryPooper => Ok(Player::AngryPooper),
+        }
+    }
 }
 
 struct Game {
@@ -34,7 +46,8 @@ struct Game {
     angry_pooper_image: Image,
     grid_line: Mesh,
     cells: [[CellState; 3]; 3],
-    turn: Turn,
+    turn: Player,
+    winner: Option<Player>,
 }
 
 const WINDOW_WIDTH: f32 = 800.0;
@@ -63,13 +76,25 @@ impl Game {
                 Color::new(0.1, 0.1, 0.25, 1.0),
             )?,
             cells: Default::default(),
-            turn: Turn::CanPooper,
+            turn: Player::CanPooper,
+            winner: None,
         })
+    }
+
+    fn get_winner(&self) -> Option<Player> {
+        for cell_row in &self.cells {
+            if cell_row[0] == cell_row[1] && cell_row[1] == cell_row[2] {
+                return (&cell_row[0]).try_into().ok();
+            }
+        }
+
+        return None;
     }
 }
 
 impl EventHandler<GameError> for Game {
     fn update(&mut self, _context: &mut ggez::Context) -> Result<(), GameError> {
+        self.winner = self.get_winner();
         Ok(())
     }
 
@@ -96,8 +121,8 @@ impl EventHandler<GameError> for Game {
                                 *cell = self.turn.clone().into();
 
                                 self.turn = match self.turn {
-                                    Turn::CanPooper => Turn::AngryPooper,
-                                    Turn::AngryPooper => Turn::CanPooper,
+                                    Player::CanPooper => Player::AngryPooper,
+                                    Player::AngryPooper => Player::CanPooper,
                                 }
                             }
                         }
@@ -178,7 +203,11 @@ impl EventHandler<GameError> for Game {
 
             let status_size = 64.0;
 
-            let mut status_text = Text::new("'s turn!");
+            let mut status_text = match self.winner {
+                None => Text::new("'s turn!"),
+                Some(_) => Text::new(" has won!"),
+            };
+
             status_text.set_scale(PxScale {
                 x: status_size,
                 y: status_size,
@@ -195,9 +224,15 @@ impl EventHandler<GameError> for Game {
                     .color(Color::new(0.01, 0.01, 0.01, 1.0)),
             );
 
-            let status_icon = match self.turn {
-                Turn::CanPooper => &self.can_pooper_image,
-                Turn::AngryPooper => &self.angry_pooper_image,
+            let status_icon = match self.winner.as_ref() {
+                Some(winner) => match winner {
+                    Player::CanPooper => &self.can_pooper_image,
+                    Player::AngryPooper => &self.angry_pooper_image,
+                },
+                None => match self.turn {
+                    Player::CanPooper => &self.can_pooper_image,
+                    Player::AngryPooper => &self.angry_pooper_image,
+                },
             };
 
             canvas.draw(
