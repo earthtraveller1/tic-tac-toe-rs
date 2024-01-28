@@ -106,6 +106,22 @@ impl Game {
 
         return None;
     }
+
+    fn is_tie(&self) -> bool {
+        self.winner.is_none() && self.cells.iter().fold(true, |acc, cell_row| {
+            if cell_row.iter().fold(true, |acc, cell| {
+                if let CellState::Nothing = cell {
+                    false
+                } else {
+                    acc
+                }
+            }) {
+                acc
+            } else {
+                false
+            }
+        })
+    }
 }
 
 impl EventHandler<GameError> for Game {
@@ -121,7 +137,7 @@ impl EventHandler<GameError> for Game {
         mouse_x: f32,
         mouse_y: f32,
     ) -> Result<(), GameError> {
-        if let Some(_) = self.winner {
+        if self.winner.is_some() {
             return Ok(());
         }
 
@@ -222,10 +238,15 @@ impl EventHandler<GameError> for Game {
             // Draw the status to indicate who's turn it is.
 
             let status_size = 64.0;
+            let is_tie = self.is_tie();
 
-            let mut status_text = match self.winner {
-                None => Text::new("'s turn!"),
-                Some(_) => Text::new(" has won!"),
+            let mut status_text = if !is_tie {
+                match self.winner {
+                    None => Text::new("'s turn!"),
+                    Some(_) => Text::new(" has won!"),
+                }
+            } else {
+                Text::new("Tie!")
             };
 
             status_text.set_scale(PxScale {
@@ -240,7 +261,11 @@ impl EventHandler<GameError> for Game {
             canvas.draw(
                 &status_text,
                 DrawParam::new()
-                    .dest(Vec2::new(pooper_size, 0.0))
+                    .dest(if is_tie {
+                        Vec2::ZERO
+                    } else {
+                        Vec2::new(pooper_size, 0.0)
+                    })
                     .color(Color::new(0.01, 0.01, 0.01, 1.0)),
             );
 
@@ -255,12 +280,14 @@ impl EventHandler<GameError> for Game {
                 },
             };
 
-            canvas.draw(
-                status_icon,
-                DrawParam::new()
-                    .dest(Vec2::new(0.0, 0.0))
-                    .scale(Vec2::new(pooper_scale, pooper_scale)),
-            );
+            if !is_tie {
+                canvas.draw(
+                    status_icon,
+                    DrawParam::new()
+                        .dest(Vec2::new(0.0, 0.0))
+                        .scale(Vec2::new(pooper_scale, pooper_scale)),
+                );
+            }
         }
 
         canvas.finish(context)?;
